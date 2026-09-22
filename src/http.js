@@ -13,8 +13,8 @@ function corsHeaders() {
   }
 }
 
-export function runHttp({ port = 3827, host = "0.0.0.0" } = {}) {
-  const server = new McpServer({ name: "mcp-web", version: "1.1.0", tools: createTools() })
+export function runHttp({ port = 3827, host = "0.0.0.0", engine = "dom" } = {}) {
+  const server = new McpServer({ name: "mcp-web", version: "1.2.0", tools: createTools({ engine }) })
   const sessions = new Map() // sessionId -> { res (SSE), queue }
   // queue per session: tools/call stateful (navigate → query dst) — wajib serial.
 

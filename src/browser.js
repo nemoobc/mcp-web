@@ -6,7 +6,7 @@ import { parseHTML } from "linkedom"
 export const DEFAULT_OPTIONS = {
   timeoutMs: 30000,
   maxBytes: 5 * 1024 * 1024, // 5MB — anti botak
-  userAgent: "mcp-web/1.1.0 (+termux)",
+  userAgent: "mcp-web/1.2.0 (+termux)",
   followRedirects: true,
 }
 

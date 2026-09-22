@@ -2,6 +2,7 @@
 // Semua tool web: navigate, get_content, query, click, fill, submit, wait,
 // js_eval, console_get, network_logs, cookies, history, reset, screenshot.
 import { createPage } from "./browser.js"
+import { createJsPage } from "./engine-js.js"
 import { McpError, ERR } from "./protocol.js"
 
 function text(result) {
@@ -30,8 +31,9 @@ function fireEvent(page, el, type) {
   } catch {}
 }
 
-export function createTools() {
-  const page = createPage()
+export function createTools({ engine = "dom" } = {}) {
+  const page = engine === "js" ? createJsPage() : createPage()
+  const jsMode = page.isJs === true
 
   return [
     {
@@ -130,10 +132,11 @@ export function createTools() {
           page.consoleLogs.push({ level: "info", message: `toggle ${sel} → ${el.checked}` })
           return text(toJson({ clicked: sel, type: "toggle", checked: el.checked }))
         }
-        // button / div — trigger event click (JS handler jalan kalau halaman punya listener; kita kirim event DOM)
+        // button / div — trigger event click. Mode JS (jsdom): listener halaman DIEKSEKUSI (SPA hidup).
         fireEvent(page, el, "click")
         page.consoleLogs.push({ level: "info", message: `click ${sel} (${tag})` })
-        return text(toJson({ clicked: sel, type: tag, note: "klik DOM (tanpa JS engine penuh)" }))
+        const note = jsMode ? "JS engine aktif — listener halaman dieksekusi" : "klik DOM (tanpa JS engine penuh)"
+        return text(toJson({ clicked: sel, type: tag, engine: jsMode ? "js" : "dom", note }))
       },
     },
 
@@ -205,9 +208,10 @@ export function createTools() {
           const s = await page.navigate(target.toString())
           return text(toJson({ submitted: sel, method, ...s }))
         }
-        // POST tanpa JS engine: catat saja
-        page.consoleLogs.push({ level: "warn", message: `form POST ${sel} — tidak dieksekusi (tanpa JS enginne)` })
-        return text(toJson({ submitted: sel, method, note: "POST butuh JS engine — hanya dicatat", action }))
+        // POST: tanpa JS engine catat saja; dengan JS engine, form submit asli tetap perlu
+        // tombol submit di halaman — kami catat agar tidak salah eksekusi.
+        page.consoleLogs.push({ level: "warn", message: `form POST ${sel} — tidak dieksekusi langsung (jelas via tombol submit / JS)` })
+        return text(toJson({ submitted: sel, method, engine: jsMode ? "js" : "dom", note: jsMode ? "POST tidak dieksekusi langsung — pakai click() pada tombol submit bila perlu" : "POST butuh JS engine — hanya dicatat", action }))
       },
     },
 
@@ -221,7 +225,8 @@ export function createTools() {
       async handler({ ms = 1000 }) {
         const waitMs = Math.min(Math.max(Number(ms) || 0, 0), 30000)
         await new Promise((r) => setTimeout(r, waitMs))
-        return text(toJson({ waitedMs: waitMs, note: "dalam mode tanpa JS engine, wait tidak menambah apa pun selain jeda" }))
+        const note = jsMode ? "jeda — JS engine memproses timer/microtask halaman" : "dalam mode tanpa JS engine, wait tidak menambah apa pun selain jeda"
+        return text(toJson({ waitedMs: waitMs, note }))
       },
     },
 
@@ -238,7 +243,12 @@ export function createTools() {
       async handler({ code }) {
         requirePage(page)
         if (!code || typeof code !== "string") throw new McpError(ERR.INVALID_PARAMS, "code wajib string")
-        // Solusi ringan: jalankan dengan vm dalam konteks global; ekspos document/window minimal.
+        // Mode JS: eksekusi di konteks halaman penuh (window.eval — JS hidup).
+        if (jsMode) {
+          const result = page.window.eval(code)
+          return text(toJson({ engine: "js", result: typeof result === "string" ? result : result }))
+        }
+        // Mode DOM: solusi ringan dengan vm; ekspos document/window minimal.
         const vm = await import("vm")
         const sandbox = {
           document: page.document,

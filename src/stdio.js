@@ -3,11 +3,11 @@ import readline from "readline"
 import { McpServer, processLine } from "./protocol.js"
 import { createTools } from "./tools.js"
 
-export function runStdio() {
+export function runStdio({ engine = "dom" } = {}) {
   const server = new McpServer({
     name: "mcp-web",
-    version: "1.1.0",
-    tools: createTools(),
+    version: "1.2.0",
+    tools: createTools({ engine }),
   })
 
   const rl = readline.createInterface({ input: process.stdin, crlfDelay: Infinity })
