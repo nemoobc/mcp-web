@@ -1,0 +1,23 @@
+{
+  "name": "mcp-web",
+  "version": "1.1.0",
+  "description": "MCP server web automation untuk Termux — stdio + remote HTTP/SSE, pure Node, tanpa Chromium/root/proot.",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "start": "node bin/webdrive-mcp.js serve"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bin": {
+    "mcp-web": "bin/mcp-web.js"
+  },
+  "dependencies": {
+    "linkedom": "^0.18.0"
+  }
+}
