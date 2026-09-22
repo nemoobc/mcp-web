@@ -106,34 +106,6 @@ submit    → #search                 (form GET diikuti)
 network_logs →                      (debug request/response)
 ```
 
-## Plugin OpenCode (combo maksimal)
-
-Supaya tools-nya bisa **di-combo** dengan agent OpenCode, repo ini menyertakan plugin:
-
-- **`plugin/mcp-web-combo/`** — plugin OpenCode yang:
-  1. **Auto-daftarkan** MCP server `mcp-web` (lokal, stdio) kalau belum ada di config.
-  2. Menambah command **`/web`** — combo eksplorasi: buka → baca → klik/form → jawab.
-  3. Menambah command **`/web-debug`** — combo debugging: buka → ambil network/console → laporan temuan.
-
-### Cara pasang plugin
-
-```bash
-cd ~/mcp-web/plugin/mcp-web-combo
-npm install        # pasang SDK @opencode/plugin (lokal di folder plugin, tak mengotori root)
-```
-
-Lalu daftarkan plugin di `~/.config/opencode/opencode.json`:
-
-```jsonc
-{
-  "plugins": ["/data/data/com.termux/files/home/mcp-web/plugin/mcp-web-combo"]
-}
-```
-
-Restart OpenCode (`opencode service restart`) — plugin langsung aktif. Setelah itu di TUI ketik `/` untuk melihat command `/web` dan `/web-debug`. MCP server `mcp-web` otomatis terhubung dan tools-nya (navigate, click, fill, get_content, network_logs, console_get, dan lain-lain) tersedia untuk agent.
-
-> Plugin ini dibuat dari nol oleh Nemo. Versi SDK plugin mengikuti `@opencode/plugin` 2.x — pastikan versi OpenCode kamu kompatibel.
-
 ## Batasan (dijelaskan dengan jujur)
 
 Karena berjalan **tanpa Chromium**, `mcp-web` tidak melakukan rendering visual piksel, eksekusi JavaScript halaman penuh, atau layout CSS. Yang disediakan adalah:
@@ -156,8 +128,6 @@ mcp-web/
 │   ├── http.js           # transport HTTP + SSE (remote)
 │   ├── browser.js        # engine halaman (fetch + DOM model)
 │   └── tools.js          # registrasi 14 tool MCP
-├── plugin/
-│   └── mcp-web-combo/    # plugin OpenCode: /web & /web-debug (combo)
 └── tests/                # test otomatis (node --test, offline)
 ```
 

@@ -106,34 +106,6 @@ submit    → #search                 (GET form is followed)
 network_logs →                      (debug request/response)
 ```
 
-## OpenCode plugin (max combo)
-
-To **combo** the tools with an OpenCode agent, this repo ships a plugin:
-
-- **`plugin/mcp-web-combo/`** — an OpenCode plugin that:
-  1. **Auto-registers** the `mcp-web` MCP server (local stdio) if it is not in your config.
-  2. Adds the **`/web`** command — exploration combo: open → read → click/form → answer.
-  3. Adds the **`/web-debug`** command — debugging combo: open → collect network/console → findings report.
-
-### Install the plugin
-
-```bash
-cd ~/mcp-web/plugin/mcp-web-combo
-npm install        # installs the @opencode/plugin SDK locally (keeps the repo root clean)
-```
-
-Then register the plugin in `~/.config/opencode/opencode.json`:
-
-```jsonc
-{
-  "plugins": ["/data/data/com.termux/files/home/mcp-web/plugin/mcp-web-combo"]
-}
-```
-
-Restart OpenCode (`opencode service restart`). In the TUI type `/` to see `/web` and `/web-debug`. The `mcp-web` MCP server connects automatically and its tools (navigate, click, fill, get_content, network_logs, console_get, and more) become available to the agent.
-
-> Built from scratch by Nemo. Plugin SDK tracks `@opencode/plugin` 2.x — make sure your OpenCode version is compatible.
-
 ## Limitations (stated honestly)
 
 Because it runs **without Chromium**, `mcp-web` does not perform pixel-perfect visual rendering, full page JavaScript execution, or CSS layout. What you get instead is:
@@ -156,8 +128,6 @@ mcp-web/
 │   ├── http.js           # HTTP + SSE transport (remote)
 │   ├── browser.js        # page engine (fetch + DOM model)
 │   └── tools.js          # 14 MCP tool registrations
-├── plugin/
-│   └── mcp-web-combo/    # OpenCode plugin: /web & /web-debug (combo)
 └── tests/                # automated tests (node --test, offline)
 ```
 
