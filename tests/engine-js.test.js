@@ -9,6 +9,13 @@ import assert from "node:assert/strict"
 import { createJsPage } from "../src/engine-js.js"
 import { startFixtureServer } from "./fixtures/live-server.js"
 
+// Fixture test ada di 127.0.0.1 → izinkan target private di proses test ini.
+process.env.MCWEB_ALLOW_PRIVATE = "1"
+
+// Snapshot global Node SEBELUM test apa pun mem-patch — dipakai test unpatch.
+const PRISTINE_FETCH = globalThis.fetch
+const PRISTINE_HAS_DOCUMENT = Object.prototype.hasOwnProperty.call(globalThis, "document")
+
 let fx
 test.before(async () => {
   fx = await startFixtureServer()
@@ -89,4 +96,41 @@ test("js engine: reset mengosongkan state", async () => {
   assert.equal(page.document, null)
   assert.equal(page.history.length, 0)
   assert.equal(page.consoleLogs.length, 0)
+})
+
+// Subdir module: prefix mirror harus konsisten (filename) — reproduksi bug
+// situs dgn struktur subfolder (dulu: specifier ./load1-child.js vs file
+// child.js → ERR_MODULE_NOT_FOUND, app tak boot).
+test("js engine: module subdir (deep/app.js → ./child.js) dieksekusi", async () => {
+  const page = freshPage()
+  await page.navigate(fx.url + "deep/")
+  assert.equal(page.window.__deepReady, "DEEP_OK")
+  assert.ok(page.consoleLogs.some((l) => /module loaded/.test(l.message)), "module loaded tercatat")
+})
+
+// jsdom AbortSignal ≠ Node AbortSignal — undici menolak instance asing tanpa
+// bridge di _trackedFetch (reproduksi: semua RPC POST status 0 "Expected
+// signal ... instance of AbortSignal" → app "You're offline").
+test("js engine: fetch dgn jsdom AbortSignal tidak ditolak (bridge)", async () => {
+  const page = freshPage()
+  await page.navigate(fx.url)
+  const ac = new page.window.AbortController() // signal = milik jsdom
+  const url = new page.window.URL("classic.js", fx.url).toString() // app selalu pakai URL absolut
+  const res = await page.window.fetch(url, { signal: ac.signal })
+  assert.equal(res.status, 200)
+  const ac2 = new page.window.AbortController()
+  ac2.abort() // aborted dahulu — bridge harus meneruskan abort, bukan throw kelas
+  await assert.rejects(() => page.window.fetch(url, { signal: ac2.signal }))
+})
+
+// WAJIB terakhir: memakai snapshot pristine dari awal file (test sebelumnya
+// meninggalkan global ter-patch) — reset() harus mengembalikan ke aslinya.
+test("js engine: reset meng-unpatch global (fetch/document kembali asli)", async () => {
+  const page = freshPage()
+  await page.navigate(fx.url)
+  const patchedFetch = globalThis.fetch // masih ter-patch (window fetch) — belum di-reset
+  page.reset() // global ter-patch saat navigate → wajib dipulihkan
+  assert.equal(globalThis.fetch, PRISTINE_FETCH) // fetch kembali ASLI proses
+  assert.notEqual(page._fetch, patchedFetch) // _fetch TIDAK rebind fetch hasil patch
+  assert.equal(Object.prototype.hasOwnProperty.call(globalThis, "document"), PRISTINE_HAS_DOCUMENT)
 })

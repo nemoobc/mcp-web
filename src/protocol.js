@@ -2,8 +2,12 @@
 // Implementasi sendiri: initialize, notifications/initialized, ping,
 // tools/list, tools/call, dll. Transport-agnostik: dipakai stdio & HTTP.
 
+// Sumber kebenaran versi: package.json — jangan tempel literal versi di mana pun.
+import { readFileSync } from "node:fs"
+const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"))
+
 export const PROTOCOL_VERSION = "2025-03-26"
-export const SERVER_INFO = { name: "mcp-web", version: "1.1.0" }
+export const SERVER_INFO = { name: "mcp-web", version: pkg.version }
 
 export class McpError extends Error {
   constructor(code, message, data) {
@@ -89,11 +93,16 @@ export class McpServer {
     const tool = this.tools.get(name)
     if (!tool) throw new McpError(ERR.TOOL_NOT_FOUND, `Tools tidak ditemukan: ${name}`)
     try {
-      const out = await tool.handler(args)
+      // Argumen ke-2 = nama tool yang dipanggil → wrapper validasi args
+      // (src/tools.js) bisa menyebut nama ASLI pemanggil, bukan nama tool
+      // pertama yang berbagi handler (3 alias: evaluate/console/network_list).
+      const out = await tool.handler(args, name)
       return { content: out.content ?? [{ type: "text", text: String(out) }], isError: !!out.isError }
     } catch (e) {
       if (e instanceof McpError) throw e
-      throw new McpError(ERR.TOOL_EXECUTION_FAILED, `Gagal eksekusi ${name}: ${e.message}`, { stack: e.stack })
+      // Stack → log server (stderr), KLIEN hanya dapat pesan singkat tanpa stack.
+      console.error(`[mcp-web] tools/call ${name} gagal: ${e.stack || e.message}`)
+      throw new McpError(ERR.TOOL_EXECUTION_FAILED, `Gagal eksekusi ${name}: ${e.message}`)
     }
   }
 }
@@ -117,6 +126,7 @@ export async function processLine(server, raw) {
   } catch (e) {
     if (isNotif) return []
     const code = e instanceof McpError ? e.code : ERR.INTERNAL
+    if (!(e instanceof McpError) && e.stack) console.error(`[mcp-web] internal: ${e.stack}`)
     return [fail(msg.id, code, e.message, e.data)]
   }
 }

@@ -63,3 +63,10 @@ test("McpError memegang code", () => {
   assert.equal(e.code, -32002)
   assert.equal(e.message, "x")
 })
+
+test("SERVER_INFO.version === package.json version (satu sumber kebenaran)", async () => {
+  const { readFileSync } = await import("node:fs")
+  const { SERVER_INFO } = await import("../src/protocol.js")
+  const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"))
+  assert.equal(SERVER_INFO.version, pkg.version)
+})

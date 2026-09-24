@@ -5,12 +5,15 @@ import { McpServer, processLine } from "../src/protocol.js"
 import { createTools } from "../src/tools.js"
 import { startFixtureServer, resultText, parseJson } from "./helpers.js"
 
+// Fixture test ada di 127.0.0.1 → izinkan target private HANYA di proses test ini.
+process.env.MCWEB_ALLOW_PRIVATE = "1"
+
 let fx
 let server
 
 before(async () => {
   fx = await startFixtureServer()
-  server = new McpServer({ name: "mcp-web", version: "1.1.0", tools: createTools() })
+  server = new McpServer({ name: "mcp-web", version: "1.1.0", tools: await createTools() })
 })
 
 after(async () => { await fx.close() })

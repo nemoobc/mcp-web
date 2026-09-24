@@ -10,7 +10,11 @@ pakai:
   mcp-web stdio              mode lokal (default MCP stdio, buat opencode)
   mcp-web stdio --js         mode lokal + engine JS hidup (jsdom: SPA/JS penuh,
                              tanpa Chromium/adb; butuh situs tepercaya)
-  mcp-web serve --port 3827  mode remote (HTTP + SSE — dari perangkat lain)
+  mcp-web serve --port 3827  mode remote (HTTP + SSE — default bind 127.0.0.1;
+                             semua request wajib token, dicetak di log saat start;
+                             token bisa di-set via env MCWEB_TOKEN)
+  mcp-web serve --port 3827 --host 0.0.0.0   bind ke semua interface (hati-hati:
+                             hanya untuk jaringan tepercaya, token tetap wajib)
   mcp-web serve --port 3827 --js   remote + engine JS hidup
   mcp-web --help             bantuan ini
 `
@@ -23,7 +27,9 @@ if (cmd === "--help" || cmd === "-h" || cmd === "help") {
 if (cmd === "serve") {
   const portIdx = rest.indexOf("--port")
   const port = portIdx >= 0 ? Number(rest[portIdx + 1]) : 3827
-  runHttp({ port, engine })
+  const hostIdx = rest.indexOf("--host")
+  const host = hostIdx >= 0 ? rest[hostIdx + 1] : undefined // undefined → default 127.0.0.1
+  await runHttp({ port, host, engine })
 } else {
-  runStdio({ engine })
+  await runStdio({ engine })
 }

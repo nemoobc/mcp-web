@@ -1,0 +1,17 @@
+{
+  "name": "browser-mcp",
+  "version": "1.0.0",
+  "description": "Plugin OpenCode v2 — 54 tool browser mcp-web di namespace 'browser' (45 parity builtin + 9 eksisting).",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@opencode/plugin": "^2.0.15"
+  },
+  "overrides": {
+    "@opentelemetry/core": "2.11.0"
+  }
+}
