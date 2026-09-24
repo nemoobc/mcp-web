@@ -11,9 +11,10 @@
 // Test DETERMINISTIK — TANPA timing tebakan:
 //  * gate fixture HTTP tak pernah dilepas selama assertion → tanpa fix
 //    screenshot menggantung → watchdog 20s yang menagih;
-//  * timeout aset 10s = gate waktu NYATA → selesai < 15s (10s + margin
-//    timer-starvation Termux; data: 10,4s solo, 13,3s paralel) membuktikan
-//    timeout bekerja — tanpa fix gantung ±301s kena watchdog 25s.
+//  * timeout aset 10s = gate waktu NYATA → selesai < 20s (gerbang ms<20000;
+//    10s timeout + margin timer-starvation Termux; data: 10,4s solo, 13,3s
+//    paralel, 15,4s pernah tercatat) membuktikan timeout bekerja — tanpa fix
+//    gantung ±301s kena watchdog 25s.
 //
 // R5 critic (test regresi ditambahkan):
 //  * P2-3: 3 stylesheet menggantung wajib di-fetch PARALEL (bukti: `startedAt`
@@ -167,7 +168,7 @@ async function netLogs() {
   return JSON.parse(out.content[0].text).logs
 }
 
-test("P1-a: stylesheet tak PERNAH merespons → screenshot format:tree selesai <15s + notes stylesheet gagal", async () => {
+test("P1-a: stylesheet tak PERNAH merespons → screenshot format:tree selesai <20s + notes stylesheet gagal", async () => {
   const gate = gates.get("/hang.css")
   const nav = await raced(outcome(navigate.handler({ url: `${base}/css-hang/`, timeoutMs: 30000 })), 45000)
   assert.ok(!nav.watchdog, "navigate fixture HTML lokal menggantung ≥45s (server fixture rusak?)")
@@ -201,7 +202,7 @@ test("P1-a: stylesheet tak PERNAH merespons → screenshot format:tree selesai <
   assert.equal(gate.released, false, "gate TIDAK pernah dilepas selama assertion — bukti tak menunggu server")
 })
 
-test("P1-b: gambar TAK PERNAH merespons → screenshot format:png selesai <15s + notes gambar gagal", async () => {
+test("P1-b: gambar TAK PERNAH merespons → screenshot format:png selesai <20s + notes gambar gagal", async () => {
   const gate = gates.get("/hang.png")
   const nav = await raced(outcome(navigate.handler({ url: `${base}/img-hang/`, timeoutMs: 30000 })), 45000)
   assert.ok(!nav.watchdog, "navigate fixture HTML lokal menggantung ≥45s (server fixture rusak?)")

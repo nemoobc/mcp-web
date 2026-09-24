@@ -2,7 +2,7 @@
 
 **MCP server for web automation on Termux** — open pages, click, fill forms, inspect the DOM, and debug right from your AI. Pure Node.js, built from scratch: no Chromium, no root, no proot, no desktop app.
 
-[![Version](https://img.shields.io/badge/version-1.2.0-blue)](package.json) [![Tests](https://img.shields.io/badge/tests-203%20pass-green)]() [![License](https://img.shields.io/badge/license-MIT-brightgreen)](LICENSE)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue)](package.json) [![Tests](https://img.shields.io/badge/tests-204%20pass-green)]() [![License](https://img.shields.io/badge/license-MIT-brightgreen)](LICENSE)
 
 ---
 
@@ -80,7 +80,7 @@ curl -fsSL https://raw.githubusercontent.com/nemoobc/mcp-web/main/uninstall.sh |
 curl -fsSL https://raw.githubusercontent.com/nemoobc/mcp-web/main/uninstall.sh -o uninstall.sh && bash uninstall.sh
 ```
 
-Both scripts are **idempotent** (safe to run repeatedly — they never create duplicate entries), copy `opencode.json` to `opencode.json.bak.<epoch>` **before** changing anything (unique names — old backups are never overwritten; `uninstall.sh` only backs up when the config actually changes), then verify their own output. Overwriting an existing `mcp.servers.web` entry or encountering unexpected `mcp`/`plugins` structures always prints a **warning** to stderr (never silently). `uninstall.sh` only removes `web` when it actually belongs to mcp-web (otherwise it is kept + warned), recognizes plugin entries from any path (not just `$HOME/mcp-web`), and re-enables the builtin `opencode.browser` (set `KEEP_DISABLE=1` to leave it disabled).
+Both scripts are **idempotent** (safe to run repeatedly — they never create duplicate entries), copy `opencode.json` to `opencode.json.bak.<epoch>` **before** changing anything (unique names — old backups are never overwritten; `uninstall.sh` only backs up when the config actually changes), then verify their own output. Overwriting an existing `mcp.servers.web` entry or encountering unexpected `mcp`/`plugins` structures always prints a **warning** to stdout (never silently). `uninstall.sh` only removes `web` when it actually belongs to mcp-web (otherwise it is kept + warned), recognizes plugin entries from any path (not just `$HOME/mcp-web`), and re-enables the builtin `opencode.browser` (set `KEEP_DISABLE=1` to leave it disabled).
 
 Exit codes: `0` success/nothing to remove · `1` bad argument · `2` missing repo/bin · `3` `npm install` failed · `4` config is not valid JSON (the file is left untouched) · `5` config cannot be read/written (clean stderr message, no Node stack).
 
@@ -204,7 +204,7 @@ mcp-web/
 ## Development
 
 ```bash
-npm test        # full AGGREGATE suite (203 tests: 190 server + 13 plugin, offline; --test-concurrency=4 against memory pressure)
+npm test        # full AGGREGATE suite (204 tests: 191 server + 13 plugin, offline; --test-concurrency=4 against memory pressure)
 npm start       # run the remote server on port 3827
 ```
 

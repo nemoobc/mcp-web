@@ -63,10 +63,25 @@ try {
 const cfg = process.env.MW_CFG, plug = process.env.MW_PLUG;
 const keep = process.env.MW_KEEP_DISABLE === "1";
 
-// Entri plugin milik mcp-web = path persis yang diketahui script ini ATAU pola
-// (direktori mengandung "mcp-web" + ujung "/plugin/browser-mcp").
+// Entri plugin milik mcp-web — identitas SEJATI = path repo yang tercatat di
+// mcp.servers.web.command config ini. Pola path saja TIDAK bisa membedakan
+// `alt-mcp-web` milik kita vs `proyek-lain-mcp-web` milik orang lain —
+// stringnya identik (B3 VERDICT r7). Fallback = boundary ketat "/mcp-web/".
+const repoPlugin = (cfg) => {
+  const w = cfg && cfg.mcp && cfg.mcp.servers && typeof cfg.mcp.servers === "object"
+    && !Array.isArray(cfg.mcp.servers) ? cfg.mcp.servers.web : undefined;
+  const SUFFIX = "/bin/mcp-web.js";
+  const arr = Array.isArray(w && w.command) ? w.command : [];
+  for (const a of arr) if (typeof a === "string" && a.endsWith(SUFFIX))
+    return a.slice(0, -SUFFIX.length) + "/plugin/browser-mcp";
+  const p = w && typeof w.path === "string" ? w.path : "";
+  return p.endsWith(SUFFIX) ? p.slice(0, -SUFFIX.length) + "/plugin/browser-mcp" : "";
+};
+let OUR_PLUGIN = "";
 const isOurPlugin = (p) => typeof p === "string"
-  && (p === plug || (p.includes("mcp-web") && p.endsWith("/plugin/browser-mcp")));
+  && (p === plug
+      || (p.endsWith("/plugin/browser-mcp")
+          && (p === OUR_PLUGIN || /(^|\/)mcp-web\/plugin\/browser-mcp$/.test(p))));
 // Server `web` milik mcp-web = command/path mengandung "mcp-web"; nama key
 // "web" SAJA tidak cukup (server web milik orang lain ikut terhapus, P3 R6).
 const isOurWeb = (w) => {
@@ -92,6 +107,10 @@ if (typeof d !== "object" || d === null || Array.isArray(d)) {
 }
 
 let changed = false;
+// Identitas plugin milik kita DIHITUNG SEBELUM web dihapus — kalau dihitung
+// sesudahnya repo sudah hilang dari config dan entri non-default (alt-mcp-web)
+// bakal tertinggal lagi (regresi P2 R6-3).
+OUR_PLUGIN = repoPlugin(d);
 
 if (d.mcp && typeof d.mcp === "object" && !Array.isArray(d.mcp)
   && d.mcp.servers && typeof d.mcp.servers === "object" && !Array.isArray(d.mcp.servers)
@@ -141,12 +160,25 @@ const fs = require("fs");
 try {
 const c = JSON.parse(fs.readFileSync(process.env.MW_CFG, "utf8"));
 const plug = process.env.MW_PLUG;
-const isOurPlugin = (p) => typeof p === "string"
-  && (p === plug || (p.includes("mcp-web") && p.endsWith("/plugin/browser-mcp")));
 const w = c.mcp && c.mcp.servers && typeof c.mcp.servers === "object" && !Array.isArray(c.mcp.servers)
   ? c.mcp.servers.web : undefined;
 const wCmd = Array.isArray(w && w.command) ? w.command.join(" ")
   : (w && typeof w.path === "string" ? w.path : "");
+// Identitas repo dari web command config yang sama — sejajar dengan blok utama
+// (pola ketat "/mcp-web/" saja akan melewatkan alt-mcp-web; pola longgar
+// "mcp-web" akan ikut menghapus proyek-lain-mcp-web — B3 VERDICT r7).
+const SFX = "/bin/mcp-web.js";
+const cmdArr = Array.isArray(w && w.command) ? w.command : [];
+let OUR_PLUGIN = "";
+for (const a of cmdArr) if (typeof a === "string" && a.endsWith(SFX)) {
+  OUR_PLUGIN = a.slice(0, -SFX.length) + "/plugin/browser-mcp"; break;
+}
+if (!OUR_PLUGIN && typeof wCmd === "string" && wCmd.endsWith(SFX))
+  OUR_PLUGIN = wCmd.slice(0, -SFX.length) + "/plugin/browser-mcp";
+const isOurPlugin = (p) => typeof p === "string"
+  && (p === plug
+      || (p.endsWith("/plugin/browser-mcp")
+          && (p === OUR_PLUGIN || /(^|\/)mcp-web\/plugin\/browser-mcp$/.test(p))));
 const errs = [];
 // Verifikasi MENGIHITUNG entri yang mengandung pola mcp-web (bukan path persis
 // hasil hitung script ini — pencocokan persis = sukses palsu, P2 R6).

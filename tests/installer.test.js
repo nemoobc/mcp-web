@@ -351,3 +351,23 @@ test("R6-8 (P3): config = DIREKTORI → exit 5 (bukan 1), pesan [install] GAGAL 
   assert.doesNotMatch(r.stderr, /Node\.js v\d/, "banner versi Node TIDAK boleh ikut");
   assert.doesNotMatch(r.stdout, /VERIFIKASI OK/, "verifikasi tak dijalankan saat config gagal dibaca");
 });
+
+test("B3 (P3 r7): folder proyek LAIN bernama *-mcp-web dengan struktur plugin identik TIDAK ikut terhapus (identitas = web command, bukan pola longgar)", () => {
+  const b = box();
+  const r1 = run(INSTALL, [b.cfg], { __home: b.home, MCP_WEB_DIR: ROOT });
+  assert.equal(r1.status, 0, fail(r1));
+  let c = read(b.cfg);
+  assert.ok(c.plugins.includes(PLUG), "entri milik mcp-web terpasang");
+  // proyek lain: namanya mengandung "mcp-web" + ujung "/plugin/browser-mcp"
+  // identik — pola longgar `includes("mcp-web")` ikut menelannya (B3 VERDICT r7)
+  const other = path.join(b.home, "proyek-lain-mcp-web", "plugin", "browser-mcp");
+  c.plugins.push(other);
+  fs.writeFileSync(b.cfg, JSON.stringify(c, null, 2) + "\n");
+
+  const r2 = run(UNINSTALL, [b.cfg], { __home: b.home, MCP_WEB_DIR: ROOT });
+  assert.equal(r2.status, 0, fail(r2));
+  c = read(b.cfg);
+  assert.ok(!c.plugins.includes(PLUG), "entri milik mcp-web harus hilang");
+  assert.ok(c.plugins.includes(other), "entri proyek-lain-mcp-web harus SELAMAT — dulu ikut terhapus (B3 r7)");
+  assert.match(r2.stdout, /OK/, "verifikasi tetap jujur");
+});

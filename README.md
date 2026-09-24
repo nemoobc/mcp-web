@@ -2,7 +2,7 @@
 
 **MCP server web automation untuk Termux** — buka web, klik, isi formulir, telusuri DOM, dan debug langsung dari AI. Murni Node.js, dibangun dari nol, tanpa Chromium, tanpa root, tanpa proot, tanpa aplikasi desktop.
 
-[![Versi](https://img.shields.io/badge/versi-1.2.0-blue)](package.json) [![Test](https://img.shields.io/badge/test-203%20pass-green)]() [![Lisensi](https://img.shields.io/badge/lisensi-MIT-brightgreen)](LICENSE)
+[![Versi](https://img.shields.io/badge/versi-1.2.0-blue)](package.json) [![Test](https://img.shields.io/badge/test-204%20pass-green)]() [![Lisensi](https://img.shields.io/badge/lisensi-MIT-brightgreen)](LICENSE)
 
 ---
 
@@ -80,7 +80,7 @@ curl -fsSL https://raw.githubusercontent.com/nemoobc/mcp-web/main/uninstall.sh |
 curl -fsSL https://raw.githubusercontent.com/nemoobc/mcp-web/main/uninstall.sh -o uninstall.sh && bash uninstall.sh
 ```
 
-Keduanya **idempoten** (boleh dijalankan berkali-kali — tak pernah membuat entri dobel), menyalin `opencode.json` ke `opencode.json.bak.<epoch>` **sebelum** mengubah apa pun (nama unik — backup lama tak pernah tertimpa; `uninstall.sh` hanya membuat backup bila config benar-benar berubah), lalu memverifikasi hasilnya sendiri. Menimpa entri `mcp.servers.web` lama atau struktur `mcp`/`plugins` yang tak diduga selalu memunculkan **peringatan** di stderr (bukan senyap). `uninstall.sh` hanya menghapus `web` bila memang milik mcp-web (selain itu dibiarkan + peringatan), mengenali entri plugin dari path apa pun (bukan cuma `$HOME/mcp-web`), dan mengembalikan builtin `opencode.browser` (setelan `KEEP_DISABLE=1` membiarkannya tetap dimatikan).
+Keduanya **idempoten** (boleh dijalankan berkali-kali — tak pernah membuat entri dobel), menyalin `opencode.json` ke `opencode.json.bak.<epoch>` **sebelum** mengubah apa pun (nama unik — backup lama tak pernah tertimpa; `uninstall.sh` hanya membuat backup bila config benar-benar berubah), lalu memverifikasi hasilnya sendiri. Menimpa entri `mcp.servers.web` lama atau struktur `mcp`/`plugins` yang tak diduga selalu memunculkan **peringatan** di stdout (bukan senyap). `uninstall.sh` hanya menghapus `web` bila memang milik mcp-web (selain itu dibiarkan + peringatan), mengenali entri plugin dari path apa pun (bukan cuma `$HOME/mcp-web`), dan mengembalikan builtin `opencode.browser` (setelan `KEEP_DISABLE=1` membiarkannya tetap dimatikan).
 
 Exit code: `0` sukses/tidak ada yang dicabut · `1` argumen salah · `2` repo/bin hilang · `3` `npm install` gagal · `4` config bukan JSON valid (file dijamin tidak disentuh) · `5` config tak bisa dibaca/ditulis (pesan rapi ke stderr, tanpa stack Node).
 
@@ -210,7 +210,7 @@ mcp-web/
 ## Pengembangan
 
 ```bash
-npm test        # seluruh suite AGREGAT (203 test: 190 server + 13 plugin, offline; --test-concurrency=4 anti-tekanan memori)
+npm test        # seluruh suite AGREGAT (204 test: 191 server + 13 plugin, offline; --test-concurrency=4 anti-tekanan memori)
 npm start       # jalankan server remote di port 3827
 ```
 
